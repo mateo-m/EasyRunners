@@ -257,6 +257,25 @@ async def test_isolated_mode_uses_privileged_private_daemon(settings) -> None:
     assert "security_opt" not in kwargs
     assert kwargs["volumes"] == {}
     assert kwargs["environment"]["DOCKER_HOST"].endswith("easyrunners-docker/docker.sock")
+    assert "runtime" not in kwargs
+
+
+@pytest.mark.asyncio
+async def test_sysbox_mode_uses_private_daemon_without_privileges(settings) -> None:
+    client = FakeClient()
+    manager = DockerRunnerManager(settings, client)
+    await manager.create_runner(
+        "sysbox",
+        RunnerPoolConfig(labels=["small"], docker_mode="sysbox"),
+        "token",
+        "https://github.com/o/r",
+    )
+    kwargs = client.containers.kwargs
+    assert kwargs["runtime"] == "sysbox-runc"
+    assert kwargs["privileged"] is False
+    assert kwargs["user"] == "0:0"
+    assert kwargs["environment"]["RUNNER_DOCKER_MODE"] == "sysbox"
+    assert kwargs["environment"]["DOCKER_HOST"].endswith("easyrunners-docker/docker.sock")
 
 
 @pytest.mark.asyncio

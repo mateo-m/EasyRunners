@@ -360,6 +360,11 @@ but the outer runner container must be privileged. It removes exposure to the ho
 it does not make untrusted privileged workloads safe. Verify that the host permits nested Docker and
 use separate VMs for hostile multi-tenant code.
 
+`docker_mode: sysbox` starts the same private daemon, but runs the runner container with the
+[Sysbox](https://github.com/nestybox/sysbox) runtime instead of `--privileged`. Root in the runner
+maps to an unprivileged user on the host, so a job that controls the daemon does not control the
+host. Install Sysbox on the host first: the Docker daemon must list the `sysbox-runc` runtime.
+
 Therefore:
 
 1. Never run arbitrary or unreviewed fork pull-request code on these runners.
@@ -368,7 +373,8 @@ Therefore:
 4. Expose deployment credentials only through the deploy pool.
 5. Use `docker_mode: none` when jobs do not need Docker.
 6. Prefer `docker_mode: isolated` when Docker jobs must not leave arbitrary resources in the host
-   daemon and the privileged-container tradeoff is acceptable.
+   daemon and the privileged-container tradeoff is acceptable. Prefer `docker_mode: sysbox` when the
+   host can run Sysbox.
 7. For hostile multi-tenant workloads, use separate VMs or ARC/scale sets.
 
 None/socket runner containers are otherwise non-privileged, drop capabilities, set

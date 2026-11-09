@@ -14,7 +14,7 @@ run_as_runner() {
   fi
 }
 
-if [[ "${RUNNER_DOCKER_MODE:-none}" == "isolated" ]]; then
+if [[ "${RUNNER_DOCKER_MODE:-none}" == "isolated" || "${RUNNER_DOCKER_MODE:-none}" == "sysbox" ]]; then
   if [[ "$(id -u)" -ne 0 ]]; then
     echo "runner.docker_isolated_requires_root" >&2
     exit 1
