@@ -54,6 +54,7 @@ function dockerModeLabel(mode) {
   return {
     socket: 'Host Docker socket',
     isolated: 'Isolated Docker daemon',
+    sysbox: 'Sysbox Docker daemon',
     none: 'No Docker access',
   }[mode] || mode;
 }

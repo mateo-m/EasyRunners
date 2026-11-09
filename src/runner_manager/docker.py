@@ -254,7 +254,8 @@ class DockerRunnerManager:
                 "COMPOSE_PROJECT_NAME": compose_project,
             }
         )
-        if pool.docker_mode == DockerMode.ISOLATED:
+        private_daemon = pool.docker_mode in (DockerMode.ISOLATED, DockerMode.SYSBOX)
+        if private_daemon:
             environment["DOCKER_HOST"] = "unix:///var/run/easyrunners-docker/docker.sock"
 
         labels = {
@@ -284,19 +285,18 @@ class DockerRunnerManager:
             source, target, mode = _parse_volume(value)
             volumes[source] = {"bind": target, "mode": mode}
 
-        isolated = pool.docker_mode == DockerMode.ISOLATED
         kwargs: dict[str, Any] = {
             "image": image,
             "name": name,
             "detach": True,
             "environment": environment,
             "labels": labels,
-            "user": "0:0" if isolated else "1001:1001",
+            "user": "0:0" if private_daemon else "1001:1001",
             "working_dir": "/home/runner",
             "mem_limit": pool.memory,
             "nano_cpus": int(pool.cpu * 1_000_000_000),
             "pids_limit": pool.pids_limit,
-            "privileged": isolated,
+            "privileged": pool.docker_mode == DockerMode.ISOLATED,
             "volumes": volumes,
             "group_add": group_add,
             "log_config": LogConfig(
@@ -304,7 +304,11 @@ class DockerRunnerManager:
                 config={"max-size": "10m", "max-file": "3"},
             ),
         }
-        if not isolated:
+        # Sysbox maps root of the container to an unprivileged host user, so the
+        # private daemon runs without a privileged container.
+        if pool.docker_mode == DockerMode.SYSBOX:
+            kwargs["runtime"] = "sysbox-runc"
+        if not private_daemon:
             kwargs["cap_drop"] = ["ALL"]
             kwargs["security_opt"] = ["no-new-privileges:true"]
         if self.settings.runner_network:

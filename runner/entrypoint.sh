@@ -14,16 +14,21 @@ run_as_runner() {
   fi
 }
 
-if [[ "${RUNNER_DOCKER_MODE:-none}" == "isolated" ]]; then
+if [[ "${RUNNER_DOCKER_MODE:-none}" == "isolated" || "${RUNNER_DOCKER_MODE:-none}" == "sysbox" ]]; then
   if [[ "$(id -u)" -ne 0 ]]; then
     echo "runner.docker_isolated_requires_root" >&2
     exit 1
   fi
-  mkdir -p /var/run/easyrunners-docker /var/lib/easyrunners-docker /var/run/easyrunners-docker-exec
+  # Docker inside a Sysbox container works only with /var/lib/docker as its data root.
+  data_root=/var/lib/easyrunners-docker
+  if [[ "${RUNNER_DOCKER_MODE}" == "sysbox" ]]; then
+    data_root=/var/lib/docker
+  fi
+  mkdir -p /var/run/easyrunners-docker "$data_root" /var/run/easyrunners-docker-exec
   chown runner:runner /var/run/easyrunners-docker
   dockerd \
     --host=unix:///var/run/easyrunners-docker/docker.sock \
-    --data-root=/var/lib/easyrunners-docker \
+    --data-root="$data_root" \
     --exec-root=/var/run/easyrunners-docker-exec \
     --pidfile=/var/run/easyrunners-docker/docker.pid \
     --group=runner \

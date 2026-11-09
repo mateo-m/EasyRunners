@@ -296,7 +296,7 @@
                   <label>CPU cores<input name="cpu" type="number" min="0.1" step="0.1" value="4" required></label>
                   <label>Memory<input name="memory" value="8g" required></label>
                   <label>Runner image<input name="image" placeholder="Default image"></label>
-                  <label>Docker access<select name="docker_mode"><option value="none" selected>No Docker</option><option value="socket">Host Docker socket</option><option value="isolated">Isolated Docker daemon</option></select></label>
+                  <label>Docker access<select name="docker_mode"><option value="none" selected>No Docker</option><option value="socket">Host Docker socket</option><option value="isolated">Isolated Docker daemon</option><option value="sysbox">Sysbox Docker daemon</option></select></label>
                   <div class="form-submit"><button type="submit">Save pool</button></div>
                 </form>
                 <details class="subtle-details yaml-settings">

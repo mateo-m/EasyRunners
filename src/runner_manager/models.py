@@ -17,6 +17,7 @@ class GitHubScope(StrEnum):
 class DockerMode(StrEnum):
     SOCKET = "socket"
     ISOLATED = "isolated"
+    SYSBOX = "sysbox"
     NONE = "none"
 
 
