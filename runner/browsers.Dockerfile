@@ -39,8 +39,12 @@ RUN case "$TARGETARCH" in \
 # apt or swiftly ship here.
 RUN case "$TARGETARCH" in \
       amd64) arch=amd64 swift_os=ubuntu2404 swift_suffix= \
+        shfmt_sha=fb096c5d1ac6beabbdbaa2874d025badb03ee07929f0c9ff67563ce8c75398b1 \
+        swift_sha=69f7b2b4dbce6090b6c92194b71149a057e16269093b5a9dded38afc4a05094e \
         swiftlint_sha=dd1017cfd20a1457f264590bcb5875a6ee06cd75b9a9d4f77cd43a552499143b ;; \
       arm64) arch=arm64 swift_os=ubuntu2404-aarch64 swift_suffix=-aarch64 \
+        shfmt_sha=32d92acaa5cd8abb29fc49dac123dc412442d5713967819d8af2c29f1b3857c7 \
+        swift_sha=21eacfe571194717d269cc1e0030533bbee6131dfde82cd4f9cfbc2512e354a9 \
         swiftlint_sha=104dedff762157f5cff7752f1cc2a289b60f3ea677e72d651c6f3a3287fdd948 ;; \
       *) echo "no tools for $TARGETARCH" >&2; exit 1 ;; \
     esac \
@@ -53,10 +57,14 @@ RUN case "$TARGETARCH" in \
     && rm -rf /var/lib/apt/lists/* \
     && curl -fsSL -o /usr/local/bin/shfmt \
       "https://github.com/mvdan/sh/releases/download/v3.13.1/shfmt_v3.13.1_linux_${arch}" \
+    && echo "${shfmt_sha}  /usr/local/bin/shfmt" | sha256sum --check --strict \
     && chmod 0755 /usr/local/bin/shfmt \
+    && curl -fsSL -o /tmp/swift.tar.gz \
+      "https://download.swift.org/swift-6.4.0-release/${swift_os}/swift-6.4.0-RELEASE/swift-6.4.0-RELEASE-ubuntu24.04${swift_suffix}.tar.gz" \
+    && echo "${swift_sha}  /tmp/swift.tar.gz" | sha256sum --check --strict \
     && mkdir /opt/swift \
-    && curl -fsSL "https://download.swift.org/swift-6.4.0-release/${swift_os}/swift-6.4.0-RELEASE/swift-6.4.0-RELEASE-ubuntu24.04${swift_suffix}.tar.gz" \
-      | tar -xz -C /opt/swift --strip-components 1 \
+    && tar -xzf /tmp/swift.tar.gz -C /opt/swift --strip-components 1 \
+    && rm /tmp/swift.tar.gz \
     && curl -fsSL -o /tmp/swiftlint.zip \
       "https://github.com/realm/SwiftLint/releases/download/0.63.2/swiftlint_linux_${arch}.zip" \
     && echo "${swiftlint_sha}  /tmp/swiftlint.zip" | sha256sum --check --strict \
